@@ -1,29 +1,26 @@
 <!doctype html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Swadhin — Simple Admin</title>
   <style>
-    /* Simple clean admin styles */
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:#fff; color:#111; padding:30px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; background:#fff; color:#111; padding:30px; }
     .container { max-width:980px; margin:0 auto; }
-    h1 { font-size:40px; margin:8px 0 24px; font-weight:800; letter-spacing:-1px; }
-    .box { border:1px solid #e6e6e6; padding:20px; border-radius:8px; margin-bottom:18px; background:#fafafa; }
-    .box h3 { margin:0 0 12px; font-size:18px; }
-    input[type="text"], input[type="email"], input[type="password"], textarea, select {
-      width:100%; padding:10px; margin:6px 0 12px; box-sizing:border-box; border:1px solid #ddd; border-radius:6px; font-size:14px;
+    h1 { font-size:36px; margin:6px 0 18px; font-weight:800; }
+    .box { border:1px solid #e6e6e6; padding:18px; border-radius:8px; margin-bottom:16px; background:#fafafa; }
+    h3 { margin:0 0 10px; font-size:18px; }
+    input[type="text"], input[type="email"], input[type="password"], textarea {
+      width:100%; padding:10px; margin:8px 0; box-sizing:border-box; border:1px solid #ddd; border-radius:6px; font-size:14px;
     }
     button { padding:8px 14px; border-radius:6px; border:1px solid #bbb; background:#f7f7f7; cursor:pointer; margin-right:8px; }
-    .btn-danger { background:#fcebea; border-color:#f5c6cb; color:#b02a37; }
-    .muted { color:#777; font-size:13px; }
-    .status { margin-top:8px; color:#c0392b; font-weight:600; }
-    .green { color: #0b8a4d; }
+    .btn-danger { background:#fceaea; border-color:#f5c6cb; color:#b02a37; }
+    .status { margin-top:8px; font-weight:600; color:#c0392b; }
+    .green { color:#0b8a4d; }
     .table { width:100%; border-collapse:collapse; margin-top:10px; }
     .table th, .table td { border-bottom:1px solid #eee; text-align:left; padding:8px 6px; vertical-align:top; font-size:14px; }
     .small { font-size:13px; color:#555; }
     pre { background:#222; color:#fff; padding:12px; border-radius:6px; overflow:auto; }
-    .row { display:flex; gap:12px; align-items:center; }
     .flex { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
   </style>
 </head>
@@ -67,8 +64,8 @@
       </div>
     </div>
 
-    <div style="margin-top:18px;" class="muted">
-      <strong>Note:</strong> Make sure <code>firebase-config.js</code> is uploaded in repo root. If you see <span style="color:#c0392b">"Firebase config not found"</span> then config file not loaded.
+    <div style="margin-top:12px;" class="small">
+      <strong>Note:</strong> Make sure <code>firebase-config.js</code> is uploaded to repo root. If you see <span style="color:#c0392b">"Firebase config not found"</span> then config file not loaded.
     </div>
   </div>
 
@@ -77,23 +74,22 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-  <!-- Your firebase-config must be uploaded to repo root -->
+  <!-- firebase-config.js must be in repo root -->
   <script src="firebase-config.js"></script>
 
   <script>
-    // Quick safety check
+    // safety check
     if (!window.firebaseConfig) {
       document.getElementById('authInfo').innerText = 'Firebase config not found! Make sure firebase-config.js is uploaded.';
       document.getElementById('authInfo').style.color = '#c0392b';
-      console.error('Firebase config not found (window.firebaseConfig missing).');
+      console.error('Firebase config missing.');
     }
 
-    // Initialize Firebase
     const app = window.firebaseConfig ? firebase.initializeApp(window.firebaseConfig) : null;
     const auth = app ? firebase.auth() : null;
     const db = app ? firebase.firestore() : null;
 
-    // Elements
+    // elements
     const emailEl = document.getElementById('email');
     const passEl = document.getElementById('password');
     const btnSignIn = document.getElementById('btnSignIn');
@@ -111,7 +107,6 @@
     const messagesList = document.getElementById('messagesList');
     const exportMsgs = document.getElementById('exportMsgs');
 
-    // Auth actions
     if (auth) {
       btnCreate.addEventListener('click', async () => {
         const e = emailEl.value.trim(); const p = passEl.value;
@@ -134,21 +129,16 @@
         try { await auth.signOut(); } catch (err) { console.error(err); }
       });
 
-      // Auth state listener
       auth.onAuthStateChanged(user => {
         if (user) {
-          // signed in
           authInfo.innerText = 'Signed in as: ' + (user.email || user.uid);
           authInfo.style.color = '#0b8a4d';
           btnSignOut.style.display = 'inline-block';
-          btnSignIn.style.display = 'inline-block';
           adminArea.style.display = 'block';
           messagesBox.style.display = 'block';
-          // Load data
           loadSiteContent();
           loadMessages();
         } else {
-          // signed out
           authInfo.innerText = 'Not signed in.';
           authInfo.style.color = '#c0392b';
           btnSignOut.style.display = 'none';
@@ -159,12 +149,11 @@
         }
       });
     } else {
-      // No firebase
       document.getElementById('authInfo').innerText = 'Firebase not initialized. Check firebase-config.js';
       document.getElementById('authInfo').style.color = '#c0392b';
     }
 
-    // SITE CONTENT FUNCTIONS
+    // content functions
     async function loadSiteContent() {
       if (!db) return;
       contentList.innerHTML = 'Loading...';
@@ -180,7 +169,6 @@
           rows.push(`<tr><td style="width:35%"><strong>${escapeHtml(doc.id)}</strong></td><td>${escapeHtml(String(d.value || ''))}</td><td><button data-key="${escapeHtml(doc.id)}" class="editKeyBtn">Edit</button></td></tr>`);
         });
         contentList.innerHTML = '<table class="table"><thead><tr><th>Key</th><th>Value</th><th></th></tr></thead><tbody>' + rows.join('') + '</tbody></table>';
-        // attach edit buttons
         document.querySelectorAll('.editKeyBtn').forEach(b => {
           b.addEventListener('click', (ev) => {
             const k = ev.currentTarget.dataset.key;
@@ -196,10 +184,7 @@
     async function pickKeyForEdit(key) {
       try {
         const doc = await db.collection('site_content').doc(key).get();
-        if (!doc.exists) {
-          alert('No such key');
-          return;
-        }
+        if (!doc.exists) { alert('No such key'); return; }
         contentKey.value = key;
         contentValue.value = doc.data().value || '';
         contentKey.focus();
@@ -229,7 +214,7 @@
       } catch (err) { console.error(err); alert('Delete failed: ' + err.message); }
     });
 
-    // MESSAGES FUNCTIONS
+    // messages
     async function loadMessages() {
       if (!db) return;
       messagesList.innerHTML = 'Loading...';
@@ -242,7 +227,7 @@
         const rows = [];
         snap.forEach(doc => {
           const d = doc.data();
-          const time = d.timestamp ? new Date(d.timestamp).toLocaleString() : '';
+          const time = d.timestamp && d.timestamp.toDate ? d.timestamp.toDate().toLocaleString() : (d.timestamp ? new Date(d.timestamp).toLocaleString() : '');
           rows.push(`<tr><td style="width:18%">${escapeHtml(time)}</td><td style="width:20%">${escapeHtml(d.name||'')}</td><td style="width:20%">${escapeHtml(d.email||'')}</td><td>${escapeHtml(d.message||'')}</td></tr>`);
         });
         messagesList.innerHTML = '<table class="table"><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Message</th></tr></thead><tbody>' + rows.join('') + '</tbody></table>';
@@ -259,31 +244,17 @@
       try {
         const snap = await db.collection('contact_messages').orderBy('timestamp','desc').get();
         const out = [];
-        snap.forEach(doc => {
-          const d = doc.data();
-          out.push({ id: doc.id, ...d });
-        });
+        snap.forEach(doc => { out.push({ id: doc.id, ...doc.data() }); });
         const blob = new Blob([JSON.stringify(out,null,2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'contact_messages.json'; document.body.appendChild(a); a.click();
-        a.remove(); URL.revokeObjectURL(url);
+        const a = document.createElement('a'); a.href = url; a.download = 'contact_messages.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
       } catch (err) { console.error(err); alert('Export failed: ' + err.message); }
     });
 
-    // small helper
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]; });
     }
-
-    // On load: if firebase isn't ready we still show message; otherwise auth listener will update UI.
-    window.addEventListener('load', () => {
-      if (!window.firebaseConfig) {
-        // leave admin hidden
-      }
-    });
   </script>
-
 </body>
 </html>
